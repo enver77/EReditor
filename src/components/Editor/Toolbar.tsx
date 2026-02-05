@@ -9,9 +9,10 @@ import './Toolbar.css'
 
 interface ToolbarProps {
   editor: Editor
+  showExportPanel?: boolean
 }
 
-export default function Toolbar({ editor }: ToolbarProps) {
+export default function Toolbar({ editor, showExportPanel = true }: ToolbarProps) {
   const [showLink, setShowLink] = useState(false)
   const [showImage, setShowImage] = useState(false)
 
@@ -178,9 +179,11 @@ export default function Toolbar({ editor }: ToolbarProps) {
       <div className="toolbar-divider" />
 
       {/* Export */}
-      <div className="toolbar-group">
-        <ExportPanel editor={editor} />
-      </div>
+      {showExportPanel && (
+        <div className="toolbar-group">
+          <ExportPanel editor={editor} />
+        </div>
+      )}
 
       {showLink && (
         <LinkDialog

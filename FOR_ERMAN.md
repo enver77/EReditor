@@ -102,3 +102,124 @@ src/
 - **Click-outside-to-close:** ColorPicker uses `mousedown` listener on `document` to close when clicking outside
 - **Keyboard accessibility:** Dialogs respond to Enter (submit) and Escape (close)
 - **CSS isolation:** Each component has its own CSS file, no global class name collisions
+
+## Chapter 2: Turning EReditor Into an npm Package
+
+### What Changed and Why
+
+We started with a standalone Vite app — great for development, useless for anyone who wants to *use* EReditor in their own project. The goal: make it so someone can `npm install ereditor` and drop `<EReditor />` into their React app with two lines of code.
+
+This is the difference between building a house and building a door that fits into any house.
+
+### The Architecture of a Library
+
+When you ship an npm package, you're not shipping your development environment. You're shipping a *contract*: "Here's what you get, here's what you provide." The contract looks like this:
+
+```
+What we ship (dist/):
+  ereditor.js   ← The component code (ESM format)
+  style.css     ← All the CSS, bundled together
+  lib.d.ts      ← TypeScript type definitions
+
+What the consumer provides (peerDependencies):
+  react          ← They already have this
+  react-dom      ← They already have this
+
+What gets resolved at install time (dependencies):
+  @tiptap/*      ← Tiptap extensions
+  lowlight       ← Syntax highlighting
+```
+
+### The Props API: Designing for Consumers
+
+The old `Editor` component had zero props — it was hardcoded. The new `EReditor` component exposes a clean props interface:
+
+```typescript
+interface EReditorProps {
+  content?: string              // Give me HTML, I'll render it
+  onChange?: (html: string) => void  // I'll tell you when things change
+  editable?: boolean            // Read-only mode? Sure.
+  showToolbar?: boolean         // Don't want the toolbar? Hide it.
+  extensions?: Extensions       // Want custom Tiptap extensions? Override mine.
+  // ... and more
+}
+```
+
+**Design principle:** Every prop has a sensible default. `<EReditor />` with zero props still works perfectly. This is called "progressive disclosure" — simple things are simple, complex things are possible.
+
+### Vite Library Mode: Two Builds from One Config
+
+Here's something clever: `vite.config.ts` now checks the `mode` flag to decide what to build.
+
+- `npm run dev` → Normal dev server for the demo app (unchanged)
+- `npm run build:lib` → Library build using `vite build --mode lib`
+
+In library mode, Vite:
+1. Uses `src/lib.ts` as the entry point (not `index.html`)
+2. Outputs a single ESM file (`dist/ereditor.js`)
+3. Extracts all CSS into `dist/style.css`
+4. **Externalizes** React, ReactDOM, and Tiptap packages
+
+That last point is critical. "Externalizing" means: "don't bundle this dependency — let the consumer's bundler resolve it." If we bundled React into our library, and the consumer already has React, they'd end up with two copies. Two copies of React = broken hooks, broken context, cryptic errors. Always externalize peer dependencies.
+
+### CSS Scoping: Don't Pollute the Consumer's World
+
+The original `index.css` put variables on `:root` and reset `body` styles. For a standalone app, that's fine. For a library, it's hostile — you're overriding the consumer's global styles.
+
+**Fix:** CSS variables moved from `:root` to `.editor-wrapper`. Global resets (`body`, `box-sizing`) moved to `App.css` (demo-only). The consumer's app is untouched. They can override variables by targeting `.editor-wrapper` in their own CSS.
+
+### The `package.json` Exports Map
+
+```json
+"exports": {
+  ".": { "import": "./dist/ereditor.js", "types": "./dist/lib.d.ts" },
+  "./style.css": "./dist/style.css"
+}
+```
+
+This is the modern way to tell bundlers: "When someone writes `import { EReditor } from 'ereditor'`, give them `dist/ereditor.js`. When they write `import 'ereditor/style.css'`, give them `dist/style.css`." Without this, bundlers guess — and they often guess wrong.
+
+### Separate tsconfig for Declarations
+
+`tsconfig.lib.json` exists solely to emit `.d.ts` type declaration files. It's separate from `tsconfig.app.json` because:
+- The app tsconfig has `noEmit: true` (Vite handles compilation)
+- The lib tsconfig needs `declaration: true` and `emitDeclarationOnly: true`
+- The lib tsconfig excludes demo-only files (`main.tsx`, `App.tsx`)
+
+You can't serve two masters with one tsconfig.
+
+### New Lessons Learned
+
+#### Lesson: peerDependencies vs dependencies
+
+**Rule of thumb:** If the consumer must have it (React), make it a `peerDependency`. If it's an internal implementation detail the consumer shouldn't worry about (Tiptap extensions), make it a `dependency`. If it's only for development (ESLint, TypeScript), make it a `devDependency`.
+
+We kept `react` and `react-dom` in both `peerDependencies` (for the consumer) and `devDependencies` (for our own dev server). This is standard practice.
+
+#### Lesson: The `files` Field Saves Everyone
+
+`"files": ["dist"]` in `package.json` means npm only publishes the `dist/` folder. Without it, you'd ship your source code, node_modules references, test files — everything. Always be explicit about what you ship.
+
+#### Lesson: sideEffects and Tree Shaking
+
+`"sideEffects": ["**/*.css"]` tells bundlers: "You can tree-shake any JavaScript import that isn't used, but CSS imports always have side effects (they add styles to the page) — don't remove them." Without this, aggressive bundlers might drop your CSS.
+
+#### Lesson: The Entry Point Trick
+
+`src/lib.ts` imports all CSS files at the top, then re-exports the public API. When Vite builds in library mode, it:
+1. Sees the CSS imports → extracts them into `dist/style.css`
+2. Sees the JS exports → bundles them into `dist/ereditor.js`
+
+The consumer does `import 'ereditor/style.css'` separately. This is the standard pattern for React component libraries. The alternative (injecting CSS at runtime) causes flash-of-unstyled-content and makes server-side rendering harder.
+
+### How Good Engineers Think About Library Design
+
+1. **API surface area matters.** Every prop you add is a promise you maintain forever. Start minimal, add later. It's easy to add a prop; it's a breaking change to remove one.
+
+2. **Defaults should be opinionated.** `<EReditor />` with no props should produce something useful. Don't make the consumer configure 10 things just to see text on screen.
+
+3. **Don't break the consumer's world.** No global CSS resets. No window/document monkey-patching. Your component should be a good citizen in any React app.
+
+4. **Two build targets, one codebase.** The demo app and the library share the same source. The difference is just which entry point Vite uses and which dependencies get externalized. This avoids the "works in dev, broken in prod" trap.
+
+5. **Type definitions are documentation.** When a consumer hovers over `<EReditor>` in VS Code and sees the full props interface with types, that's better than any README. Invest in good TypeScript types.

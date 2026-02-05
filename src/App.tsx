@@ -1,7 +1,10 @@
-import { Editor } from './components'
+import { useState } from 'react'
+import { EReditor } from './components'
 import './App.css'
 
 function App() {
+  const [html, setHtml] = useState('')
+
   return (
     <div className="app">
       <header className="app-header">
@@ -9,7 +12,15 @@ function App() {
         <span className="app-subtitle">Rich Text Editor</span>
       </header>
       <main className="app-main">
-        <Editor />
+        <EReditor
+          content="<p>Start typing here...</p>"
+          onChange={setHtml}
+          autofocus
+        />
+        <div className="html-preview">
+          <h3>HTML Output</h3>
+          <pre>{html}</pre>
+        </div>
       </main>
     </div>
   )
