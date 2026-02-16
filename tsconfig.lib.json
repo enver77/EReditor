@@ -23,7 +23,8 @@
     "src/lib.ts",
     "src/components/**/*",
     "src/extensions/**/*",
-    "src/utils/**/*"
+    "src/utils/**/*",
+    "src/i18n/**/*"
   ],
-  "exclude": ["src/main.tsx", "src/App.tsx", "src/App.css"]
+  "exclude": ["src/main.tsx", "src/App.tsx", "src/App.css", "src/standalone.ts"]
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Editor } from '@tiptap/react'
+import { useLabels } from '../../i18n/LabelsContext'
 import { getHTML, getJSON } from '../../utils/export'
 
 interface ExportPanelProps {
@@ -9,12 +10,13 @@ interface ExportPanelProps {
 export default function ExportPanel({ editor }: ExportPanelProps) {
   const [format, setFormat] = useState<'html' | 'json'>('html')
   const [open, setOpen] = useState(false)
+  const labels = useLabels()
 
   const output = format === 'html' ? getHTML(editor) : getJSON(editor)
 
   return (
     <div className="export-panel">
-      <button className="menu-button" onClick={() => setOpen(!open)} title="Export" type="button">
+      <button className="menu-button" onClick={() => setOpen(!open)} title={labels.export} type="button">
         ⤓
       </button>
       {open && (
@@ -24,13 +26,13 @@ export default function ExportPanel({ editor }: ExportPanelProps) {
               className={`export-tab ${format === 'html' ? 'active' : ''}`}
               onClick={() => setFormat('html')}
             >
-              HTML
+              {labels.html}
             </button>
             <button
               className={`export-tab ${format === 'json' ? 'active' : ''}`}
               onClick={() => setFormat('json')}
             >
-              JSON
+              {labels.json}
             </button>
           </div>
           <pre className="export-output">{output}</pre>
@@ -38,7 +40,7 @@ export default function ExportPanel({ editor }: ExportPanelProps) {
             className="dialog-btn primary"
             onClick={() => navigator.clipboard.writeText(output)}
           >
-            Copy
+            {labels.copy}
           </button>
         </div>
       )}

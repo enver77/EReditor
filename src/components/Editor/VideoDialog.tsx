@@ -1,24 +1,22 @@
 import { useState } from 'react'
 import { useLabels } from '../../i18n/LabelsContext'
 
-interface LinkDialogProps {
-  initialUrl: string
+interface VideoDialogProps {
   onSubmit: (url: string) => void
-  onRemove: () => void
   onClose: () => void
 }
 
-export default function LinkDialog({ initialUrl, onSubmit, onRemove, onClose }: LinkDialogProps) {
-  const [url, setUrl] = useState(initialUrl)
+export default function VideoDialog({ onSubmit, onClose }: VideoDialogProps) {
+  const [url, setUrl] = useState('')
   const labels = useLabels()
 
   return (
     <div className="dialog-overlay" onClick={onClose}>
       <div className="dialog" onClick={(e) => e.stopPropagation()}>
-        <h3>{labels.insertLink}</h3>
+        <h3>{labels.insertVideo}</h3>
         <input
           type="url"
-          placeholder={labels.linkUrlPlaceholder}
+          placeholder={labels.videoUrlPlaceholder}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => {
@@ -28,12 +26,9 @@ export default function LinkDialog({ initialUrl, onSubmit, onRemove, onClose }: 
           autoFocus
         />
         <div className="dialog-actions">
-          {initialUrl && (
-            <button className="dialog-btn danger" onClick={onRemove}>{labels.removeLink}</button>
-          )}
           <button className="dialog-btn" onClick={onClose}>{labels.cancel}</button>
           <button className="dialog-btn primary" onClick={() => url && onSubmit(url)} disabled={!url}>
-            {labels.apply}
+            {labels.insert}
           </button>
         </div>
       </div>

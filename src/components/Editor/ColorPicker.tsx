@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
+import { useLabels } from '../../i18n/LabelsContext'
 import './MenuButton.css'
 
-const COLORS = [
+export const DEFAULT_COLORS = [
   '#000000', '#434343', '#666666', '#999999', '#cccccc', '#ffffff',
   '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6',
   '#c0392b', '#d35400', '#f39c12', '#27ae60', '#2980b9', '#8e44ad',
@@ -14,6 +15,7 @@ interface ColorPickerProps {
   onReset: () => void
   title: string
   icon: React.ReactNode
+  colors?: string[]
 }
 
 export default function ColorPicker({
@@ -22,9 +24,12 @@ export default function ColorPicker({
   onReset,
   title,
   icon,
+  colors,
 }: ColorPickerProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const labels = useLabels()
+  const palette = colors ?? DEFAULT_COLORS
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -51,10 +56,10 @@ export default function ColorPicker({
       {open && (
         <div className="color-picker-dropdown">
           <button className="color-reset" onClick={() => { onReset(); setOpen(false) }}>
-            Reset
+            {labels.resetColor}
           </button>
           <div className="color-grid">
-            {COLORS.map((color) => (
+            {palette.map((color) => (
               <button
                 key={color}
                 className="color-swatch"

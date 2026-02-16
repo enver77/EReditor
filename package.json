@@ -23,6 +23,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:lib": "vite build --mode lib && tsc -p tsconfig.lib.json",
+    "build:standalone": "vite build --mode standalone",
     "prepublishOnly": "npm run build:lib",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -47,6 +48,7 @@
     "@tiptap/extension-text-align": "^3.19.0",
     "@tiptap/extension-text-style": "^3.19.0",
     "@tiptap/extension-underline": "^3.19.0",
+    "@tiptap/extension-youtube": "^3.19.0",
     "@tiptap/pm": "^3.19.0",
     "@tiptap/react": "^3.19.0",
     "@tiptap/starter-kit": "^3.19.0",
@@ -66,6 +68,7 @@
     "react-dom": "^19.2.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vite-plugin-css-injected-by-js": "^3.5.2"
   }
 }

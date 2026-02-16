@@ -16,6 +16,13 @@ function App() {
           content="<p>Start typing here...</p>"
           onChange={setHtml}
           autofocus
+          showWordCount
+          showFullscreenToggle
+          enableImageUpload
+          labels={{
+            bold: 'Kalin',
+            italic: 'Italik',
+          }}
         />
         <div className="html-preview">
           <h3>HTML Output</h3>

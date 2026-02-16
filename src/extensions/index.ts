@@ -13,6 +13,7 @@ import { TableHeader } from '@tiptap/extension-table'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Youtube from '@tiptap/extension-youtube'
 import { common, createLowlight } from 'lowlight'
 
 const lowlight = createLowlight(common)
@@ -50,5 +51,8 @@ export const extensions = [
   }),
   CodeBlockLowlight.configure({
     lowlight,
+  }),
+  Youtube.configure({
+    inline: false,
   }),
 ]
